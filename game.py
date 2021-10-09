@@ -5,7 +5,7 @@ from words import WORDS
 
 class Game:
     def __init__(self):
-        self.answer = None
+        self.correct_answer = None
         self.current_word = 0
         self.game_over = False
         self.started = False
@@ -18,6 +18,10 @@ class Game:
         self.randomize_words_order()
 
     def randomize_words_order(self):
+        """
+        Load the list of words (WORDS), randomize the order and store it in list_of_words.
+        Store the list of words as a string by joining them with a space between each word.
+        """
         self.list_of_words = WORDS
         random.shuffle(self.list_of_words)
         self.game_text = ' '.join(self.list_of_words)
