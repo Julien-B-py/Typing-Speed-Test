@@ -12,9 +12,12 @@ class Window(Tk):
         self.create_widgets()
         self.setup_widgets_layout()
         self.bind_functions()
-        # Initialize game
+        # Initialize game : Pick a word, highlight it and enter the countdown event
         self.active_word = self.game.list_of_words[0]
-        self.determine_word_position(self.active_word)
+        word_starting_position, word_ending_position = self.determine_word_position(self.active_word)
+        # Now we send theses two indexes values to our highlight function
+        self.highlight_current_word(word_starting_position, word_ending_position)
+        # Enter the countdown event
         self.count_down()
 
         self.mainloop()
@@ -54,6 +57,14 @@ class Window(Tk):
         self.bind("<space>", self.compare_words)
         # Catch any keypress to start the game
         self.bind("<KeyPress>", self.start_game)
+
+    def calc_accuracy(self):
+        """
+        :returns accuracy: The percentage (integer) of correctly typed words.
+        """
+        if self.game.current_word_id > 0:
+            return round(self.game.correct_words / self.game.current_word_id * 100)
+        return self.game.accuracy
 
     def compare_words(self, event):
         """
@@ -107,10 +118,7 @@ class Window(Tk):
         word_start_index = int(self.text_display.search(word, '1.0', END).split('.')[-1])
         # Since we found the beginning positon of our word, we just add the length to get the ending position
         word_end_index = word_start_index + len(word)
-        # Now we send theses two indexes values to our highlight function
-        self.highlight_current_word(word_start_index, word_end_index)
-        # Autoscroll down the Text widget by giving the current word ending position
-        self.text_display.see(f'1.{word_end_index}')
+        return word_start_index, word_end_index
 
     def display_user_feedback(self, word):
         """
@@ -136,7 +144,7 @@ class Window(Tk):
         Show the end game statistics to the user : Characters per minute, words per minute and accuracy.
         """
         messagebox.showinfo("Game over",
-                            f"Characters per minute: {self.game.characters_count}\nWords per minute: {self.game.correct_words}\nAccuracy: {round(self.game.correct_words / self.game.current_word_id * 100)}%")
+                            f"Characters per minute: {self.game.characters_count}\nWords per minute: {self.game.correct_words}\nAccuracy: {self.calc_accuracy()}%")
         self.destroy()
 
     def highlight_current_word(self, start, stop):
@@ -156,22 +164,29 @@ class Window(Tk):
         """
         Pick the next word the user will have to type from the list of words
         """
+
+        # Remove the first word from the list since we already dealt with it
+        del self.game.list_of_words[0]
+        # Increment current_word value to get global progression and calc the user accuracy later on
+        self.game.current_word_id += 1
+
         # If there still are words in our list
         if self.game.list_of_words:
-            # Remove the first one since we already dealt with it
-            del self.game.list_of_words[0]
-            # Increment current_word value to get global progression and calc the user accuracy later on
-            self.game.current_word_id += 1
             # Update the active word to guess with the first word value from the list
             self.active_word = self.game.list_of_words[0]
-            # Send this word to
-            self.determine_word_position(self.active_word)
+            # Getting word location (starting and ending indexes) in Text widget
+            word_starting_position, word_ending_position = self.determine_word_position(self.active_word)
+            # Now we send theses two indexes values to our highlight function
+            self.highlight_current_word(word_starting_position, word_ending_position)
+            # Autoscroll down the Text widget by giving the current word ending position
+            self.text_display.see(f'1.{word_ending_position}')
+        # If there are no words left
         else:
             self.end_game()
 
     def start_game(self, event):
         """
-        Set the started value to True to allow the countdown to run.
+        Set the started attribute to True to allow the countdown to run.
         """
         if event and not self.game.started:
             self.game.started = True
@@ -180,8 +195,10 @@ class Window(Tk):
         """
         Increment correctly and incorrectly typed words counters to give some real time feedback to the user
         """
-        #
+        # Check if the user typed the word correctly
         if self.game.correct_answer:
+            # Update label text
             self.correct_label['text'] = f"Correct words: {self.game.correct_words}"
         else:
+            # Update label text
             self.incorrect_label['text'] = f"Incorrect words: {self.game.incorrect_words}"

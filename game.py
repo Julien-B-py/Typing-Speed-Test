@@ -11,6 +11,7 @@ class Game:
         self.started = False
         self.timer = 60
         # SCORE
+        self.accuracy = 0
         self.characters_count = 0
         self.correct_words = 0
         self.incorrect_words = 0
