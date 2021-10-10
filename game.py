@@ -6,7 +6,7 @@ from words import WORDS
 class Game:
     def __init__(self):
         self.correct_answer = None
-        self.current_word = 0
+        self.current_word_id = 0
         self.game_over = False
         self.started = False
         self.timer = 60
